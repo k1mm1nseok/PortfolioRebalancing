@@ -7,7 +7,8 @@ Full-stack tool for optimizing and rebalancing equity portfolios. The backend us
 - Optional Black-Litterman views to tilt returns.
 - Discrete share allocations for a target investment amount plus leftover cash.
 - Trade guidance vs. current holdings (buy/sell/hold).
-- Charts and metric comparison (expected return, volatility, Sharpe).
+- Backtest chart vs. S&P 500, showing cumulative equity curves.
+- Local persistence of inputs (tickers, constraints, views) so your form state survives refreshes.
 
 ## Requirements
 - Python 3.9+ (backend)
@@ -22,6 +23,7 @@ Full-stack tool for optimizing and rebalancing equity portfolios. The backend us
    ```bash
    uvicorn app.main:app --reload --host 0.0.0.0 --port 8080
    ```
+4) The optimizer returns allocations plus a `backtest_curve` comparing the optimized portfolio to S&P 500. Ensure internet access for yfinance.
 
 ### API quick check
 ```bash
@@ -44,6 +46,7 @@ curl -X POST http://localhost:8080/api/v1/optimize \
    npm run dev
    ```
 The app expects the backend at `http://localhost:8080/api/v1` (configured in `frontend/src/api/api.ts`).
+Inputs are persisted to `localStorage` (tickers, holdings, min/max weights, views). Use the “Reset All” button to clear and revert to defaults.
 
 ## Repository layout
 - `backend/` — FastAPI app, optimization logic, yfinance data loader.
