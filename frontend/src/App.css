@@ -1,0 +1,316 @@
+#root {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #0f172a;
+}
+
+body {
+  background: linear-gradient(135deg, #f0f4ff 0%, #f9fafb 100%);
+}
+
+.App header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.App h1 {
+  margin: 0.25rem 0;
+  font-size: 2.2rem;
+}
+
+.App p {
+  margin: 0.1rem 0;
+  color: #475569;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.05);
+}
+
+.controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.controls input {
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.95rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.controls input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.controls button {
+  align-self: end;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.controls button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.25);
+}
+
+.controls button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.error {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecdd3;
+  border-radius: 10px;
+}
+
+.results {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.results > div {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.05);
+}
+
+.results h2 {
+  margin: 0 0 0.75rem;
+}
+
+.metrics table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.metrics td {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.metrics td:first-child {
+  color: #475569;
+}
+
+.metrics td:last-child {
+  text-align: right;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.metrics h2 {
+  margin-top: 0;
+}
+
+.views-card {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.views-card h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.views-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.5rem;
+}
+
+.views-select,
+.views-input {
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.95rem;
+}
+
+.views-add {
+  border: none;
+  border-radius: 8px;
+  background: #0ea5e9;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.6rem 0.8rem;
+}
+
+.views-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.views-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  background: #e0f2fe;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.views-item button {
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.tickers-card {
+  grid-column: 1 / -1;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.9rem;
+  background: #fff;
+  box-shadow: 0 5px 20px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tickers-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.tickers-title {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.tickers-hint {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.tickers-add {
+  border: none;
+  background: #22c55e;
+  color: #fff;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tickers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ticker-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ticker-row input {
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.95rem;
+}
+
+.ticker-remove {
+  border: none;
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.comparison-card {
+  grid-column: 1 / -1;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.05);
+  margin-bottom: 1rem;
+}
+
+.comparison-title {
+  margin: 0 0 0.75rem;
+  color: #0f172a;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+}
+
+.comparison-header {
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.comparison-row {
+  display: contents;
+}
+
+.comparison-label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.comparison-value {
+  color: #0f172a;
+}
+
+.comparison-diff {
+  text-align: right;
+}
