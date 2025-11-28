@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { optimizePortfolio, type OptimizeResponse } from './api/api'
 import PortfolioChart from './components/PortfolioChart'
 import OrderTable from './components/OrderTable'
-import ViewInput from './components/ViewInput'
 import ComparisonCard from './components/ComparisonCard'
 
 type OptimizationResult = OptimizeResponse & {
@@ -12,45 +11,71 @@ type OptimizationResult = OptimizeResponse & {
   }
 }
 
+type TickerRow = {
+  symbol: string
+  holdings: number
+}
+
 function App() {
-  const [tickers, setTickers] = useState<string[]>(['AAPL', 'MSFT'])
-  const [holdings, setHoldings] = useState<Record<string, number>>({})
+  const [tickers, setTickers] = useState<TickerRow[]>([
+    { symbol: 'AAPL', holdings: 0 },
+    { symbol: 'MSFT', holdings: 0 },
+  ])
   const [totalInvestment, setTotalInvestment] = useState<number>(10000)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [minWeight, setMinWeight] = useState<number | ''>('')
   const [maxWeight, setMaxWeight] = useState<number | ''>('')
   const [views, setViews] = useState<Record<string, number>>({})
+  const [selectedViewTicker, setSelectedViewTicker] = useState('')
+  const [viewValue, setViewValue] = useState<string>('')
   const [result, setResult] = useState<OptimizationResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const updateTicker = (index: number, value: string) => {
-    const next = [...tickers]
-    next[index] = value.toUpperCase()
-    setTickers(next)
-  }
-
-  const addTicker = () => setTickers((prev) => [...prev, ''])
-
-  const removeTicker = (index: number) => {
-    setTickers((prev) => prev.filter((_, i) => i !== index))
-    setHoldings((prev) => {
-      const next = { ...prev }
-      const key = tickers[index]
-      if (key) delete next[key]
+    setTickers((prev) => {
+      const next = [...prev]
+      next[index] = { ...next[index], symbol: value.toUpperCase() }
       return next
     })
   }
 
-  const updateHolding = (ticker: string, value: string) => {
-    if (!ticker) return
-    const numeric = Number(value)
-    setHoldings((prev) => ({ ...prev, [ticker]: Number.isNaN(numeric) ? 0 : numeric }))
+  const addTicker = () => setTickers((prev) => [...prev, { symbol: '', holdings: 0 }])
+
+  const removeTicker = (index: number) => {
+    setTickers((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleHoldingChange = (index: number, value: number) => {
+    setTickers((prev) => {
+      const next = [...prev]
+      next[index] = { ...next[index], holdings: value }
+      return next
+    })
+  }
+
+  const handleAddView = () => {
+    if (!selectedViewTicker || viewValue === '') return
+    const numeric = Number(viewValue)
+    if (Number.isNaN(numeric)) return
+    setViews((prev) => ({ ...prev, [selectedViewTicker]: numeric / 100 }))
+    setSelectedViewTicker('')
+    setViewValue('')
+  }
+
+  const handleRemoveView = (ticker: string) => {
+    setViews((prev) => {
+      const updated = { ...prev }
+      delete updated[ticker]
+      return updated
+    })
   }
 
   const handleOptimize = async () => {
-    const cleanedTickers = tickers.map((t) => t.trim()).filter(Boolean)
+    const cleanedTickers = tickers
+      .map((t) => t.symbol.trim().toUpperCase())
+      .filter(Boolean)
     if (cleanedTickers.length === 0) {
       setError('Please add at least one ticker.')
       return
@@ -60,6 +85,14 @@ function App() {
     setError(null)
 
     try {
+      const holdingsMap: Record<string, number> = {}
+      tickers.forEach(({ symbol, holdings }) => {
+        const cleaned = symbol.trim().toUpperCase()
+        if (cleaned) {
+          holdingsMap[cleaned] = holdings
+        }
+      })
+
       const response = await optimizePortfolio({
         tickers: cleanedTickers,
         start_date: startDate || undefined,
@@ -68,7 +101,7 @@ function App() {
         max_weight: maxWeight === '' ? undefined : Number(maxWeight),
         total_investment: totalInvestment,
         views,
-        current_holdings: Object.keys(holdings).length ? holdings : undefined,
+        current_holdings: Object.keys(holdingsMap).length ? holdingsMap : undefined,
       })
       setResult(response)
     } catch (err) {
@@ -168,11 +201,11 @@ function App() {
               </div>
               <div className="space-y-3">
                 {tickers.map((ticker, index) => (
-                  <div key={`${ticker}-${index}`} className="grid grid-cols-12 gap-3">
+                  <div key={index} className="grid grid-cols-12 gap-3">
                     <div className="col-span-5 sm:col-span-4">
                       <label className="block text-xs font-medium text-gray-600 mb-1">Ticker</label>
                       <input
-                        value={ticker}
+                        value={ticker.symbol}
                         onChange={(e) => updateTicker(index, e.target.value)}
                         placeholder="e.g. AAPL"
                         className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 bg-gray-50"
@@ -182,8 +215,11 @@ function App() {
                       <label className="block text-xs font-medium text-gray-600 mb-1">Current Holdings (shares)</label>
                       <input
                         type="number"
-                        value={holdings[ticker] ?? ''}
-                        onChange={(e) => updateHolding(ticker, e.target.value)}
+                        value={ticker.holdings === 0 ? '' : ticker.holdings}
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? 0 : parseInt(e.target.value) || 0
+                          handleHoldingChange(index, val)
+                        }}
                         className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 bg-gray-50"
                       />
                     </div>
@@ -206,13 +242,76 @@ function App() {
                 <h3 className="text-sm font-semibold text-gray-800">Black-Litterman Views</h3>
                 <button
                   type="button"
-                  onClick={() => {}}
+                  onClick={handleAddView}
                   className="px-3 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                 >
                   Add View
                 </button>
               </div>
-              <ViewInput availableTickers={tickers.filter(Boolean)} onViewsChange={setViews} />
+              <div className="space-y-3">
+                <div className="grid grid-cols-12 gap-3">
+                  <div className="col-span-5 sm:col-span-5">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Ticker</label>
+                    <select
+                      value={selectedViewTicker}
+                      onChange={(e) => setSelectedViewTicker(e.target.value)}
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 bg-gray-50"
+                    >
+                      <option value="">Select ticker</option>
+                      {tickers
+                        .map((t) => t.symbol.trim())
+                        .filter(Boolean)
+                        .map((symbol) => (
+                          <option key={symbol} value={symbol}>
+                            {symbol}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div className="col-span-5 sm:col-span-5">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Expected Return (%)</label>
+                    <input
+                      type="number"
+                      value={viewValue}
+                      onChange={(e) => setViewValue(e.target.value)}
+                      step="0.1"
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 bg-gray-50"
+                    />
+                  </div>
+                  <div className="col-span-2 flex items-end">
+                    <button
+                      type="button"
+                      onClick={handleAddView}
+                      className="w-full px-3 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {Object.entries(views).map(([tickerSymbol, value]) => (
+                    <div
+                      key={tickerSymbol}
+                      className="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 bg-white"
+                    >
+                      <span className="text-sm text-gray-800">
+                        {tickerSymbol}: {(value * 100).toFixed(1)}%
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveView(tickerSymbol)}
+                        className="text-red-600 text-sm font-medium hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  {Object.keys(views).length === 0 && (
+                    <p className="text-sm text-gray-500">No views added yet.</p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
