@@ -28,6 +28,7 @@ type OptimizationResult = {
     current: { expected_return: number; volatility: number; sharpe_ratio: number };
     optimized: { expected_return: number; volatility: number; sharpe_ratio: number };
   };
+  backtest_curve?: { date: string; portfolio: number; benchmark: number }[];
 };
 
 const DEFAULT_TICKERS: TickerRow[] = [
@@ -210,8 +211,6 @@ function App() {
 
   // Styles
   const inputStyle = "block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 bg-gray-50 border";
-  const modelName =
-    Object.keys(views).length > 0 ? "Black-Litterman Model" : "Mean-Variance Model (Standard)";
 
   // Persist user inputs
   useEffect(() => {
@@ -481,7 +480,7 @@ function App() {
                 <OrderTable
                   allocation={result.allocation}
                   leftover={result.leftover_cash}
-                  trades={result.trades}
+                  trades={result.trades || {}}
                 />
               </div>
 
