@@ -70,6 +70,77 @@ class PortfolioOptimizer:
             "leftover": leftover,
         }
 
+    def calculate_equity_curve(self, weights: Dict[str, float], initial_value: float) -> list:
+        """
+        Build daily equity curves for the optimized portfolio and the S&P 500 benchmark.
+        Returns a list of dicts: {"date": "...", "portfolio": float, "benchmark": float}
+        """
+        import yfinance as yf
+        import pandas as pd
+
+        if self.prices.empty or initial_value <= 0:
+            return []
+
+        # Ensure weights sum to 1 to avoid drift.
+        total_weight = sum(weights.values())
+        if total_weight == 0:
+            return []
+        norm_weights = {k: v / total_weight for k, v in weights.items()}
+
+        # Daily returns and portfolio cumulative curve.
+        daily_returns = self.prices.pct_change().dropna(how="all")
+        # Align weights to columns, missing ticker weight -> 0
+        weight_series = pd.Series(norm_weights)
+        aligned_weights = weight_series.reindex(daily_returns.columns).fillna(0.0)
+        portfolio_daily = daily_returns.mul(aligned_weights, axis=1).sum(axis=1)
+        portfolio_cum = (1 + portfolio_daily).cumprod()
+        portfolio_equity = portfolio_cum * initial_value
+
+        # Benchmark (^GSPC) over same date range.
+        start_date = self.prices.index.min()
+        end_date = self.prices.index.max()
+        sp500_df = yf.download("^GSPC", start=start_date, end=end_date, auto_adjust=False, progress=False)
+        benchmark_price = None
+        if not sp500_df.empty:
+            for col in ["Adj Close", "Close"]:
+                if col in sp500_df:
+                    series = sp500_df[col]
+                    if isinstance(series, pd.DataFrame):
+                        series = series.iloc[:, 0]
+                    benchmark_price = pd.to_numeric(series, errors="coerce")
+                    break
+
+        if benchmark_price is None or benchmark_price.empty:
+            benchmark_equity = pd.Series(index=portfolio_equity.index, data=initial_value)
+        else:
+            benchmark_returns = benchmark_price.pct_change().dropna()
+            benchmark_cum = (1 + benchmark_returns).cumprod()
+            benchmark_equity = (benchmark_cum * initial_value).reindex(portfolio_equity.index).ffill()
+
+        # Merge and forward-fill missing values.
+        combined = pd.DataFrame(
+            {
+                "portfolio": portfolio_equity,
+                "benchmark": benchmark_equity.reindex(portfolio_equity.index),
+            }
+        ).ffill()
+
+        # Ensure starting point at initial value.
+        if not combined.empty:
+            combined.iloc[0] = [initial_value, initial_value]
+
+        curve = []
+        for idx, row in combined.iterrows():
+            curve.append(
+                {
+                    "date": idx.strftime("%Y-%m-%d"),
+                    "portfolio": float(row["portfolio"]),
+                    "benchmark": float(row["benchmark"]),
+                }
+            )
+
+        return curve
+
     def optimize_black_litterman(
         self,
         market_caps: Dict[str, float],

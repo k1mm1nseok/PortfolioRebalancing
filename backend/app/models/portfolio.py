@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -22,3 +22,4 @@ class PortfolioResponse(BaseModel):
     leftover_cash: float
     trades: Dict[str, Dict[str, object]]
     comparison: Optional[Dict[str, Dict[str, float]]] = None
+    backtest_curve: Optional[List[Dict[str, Any]]] = None

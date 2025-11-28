@@ -3,8 +3,6 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recha
 interface PortfolioChartProps {
   data: Record<string, number>
   comparisonData?: Record<string, number>
-  hasViews?: boolean
-  modelLabel?: string
 }
 
 const COLORS = ['#2563EB', '#0EA5E9', '#6366F1', '#F59E0B', '#10B981', '#8B5CF6', '#F472B6', '#14B8A6']
@@ -22,17 +20,11 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null
 }
 
-export function PortfolioChart({ data, comparisonData, hasViews, modelLabel }: PortfolioChartProps) {
+export function PortfolioChart({ data, comparisonData }: PortfolioChartProps) {
   const sourceData = comparisonData || data
   const chartData = Object.entries(sourceData)
     .map(([name, value]) => ({ name, value: Number(value) }))
     .filter((item) => !Number.isNaN(item.value) && item.value !== 0)
-
-  const modelText = modelLabel
-    ? modelLabel
-    : hasViews
-      ? 'Optimization Model: Black-Litterman'
-      : 'Optimization Model: Mean-Variance (Standard)'
 
   return (
     <div className="w-full h-[360px]">
@@ -53,7 +45,6 @@ export function PortfolioChart({ data, comparisonData, hasViews, modelLabel }: P
           </PieChart>
         </ResponsiveContainer>
       )}
-      <div style={{ textAlign: 'center', marginTop: '0.5rem', color: '#475569', fontWeight: 600 }}>{modelText}</div>
     </div>
   )
 }

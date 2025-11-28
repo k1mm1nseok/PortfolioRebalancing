@@ -99,6 +99,11 @@ def optimize_portfolio(request: PortfolioRequest) -> PortfolioResponse:
 
         current_metrics = calculate_current_metrics(request.current_holdings, prices)
 
+        backtest_curve = optimizer.calculate_equity_curve(
+            weights=result["weights"],
+            initial_value=request.total_investment,
+        )
+
         # Compute trades vs current holdings.
         trades: Dict[str, Dict[str, object]] = {}
         for ticker, target_qty in allocation.items():
@@ -118,6 +123,7 @@ def optimize_portfolio(request: PortfolioRequest) -> PortfolioResponse:
             leftover_cash=float(allocation_result["leftover"]),
             trades=trades,
             comparison={"current": current_metrics, "optimized": metrics} if current_metrics else None,
+            backtest_curve=backtest_curve if backtest_curve else None,
         )
     except HTTPException as exc:
         # Pass through optimizer or downstream HTTPExceptions directly.
