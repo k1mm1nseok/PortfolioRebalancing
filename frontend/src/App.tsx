@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import html2canvas from "html2canvas";
 import { optimizePortfolio } from "./api/api";
 import PortfolioChart from "./components/PortfolioChart";
 import OrderTable from "./components/OrderTable";
 import ComparisonCard from "./components/ComparisonCard";
 import BacktestChart from "./components/BacktestChart";
+import DashboardSkeleton from "./components/DashboardSkeleton";
 
 // Types
 type TickerRow = {
@@ -104,6 +106,21 @@ function App() {
     setViews({});
     setSelectedViewTicker("");
     setViewValue("");
+  };
+
+  const handleDownloadOrderSheet = async () => {
+    const element = document.getElementById("order-sheet-container");
+    if (!element) return;
+    try {
+      const canvas = await html2canvas(element);
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = "rebalancing-order.png";
+      link.click();
+    } catch (err) {
+      console.error("Failed to capture order sheet", err);
+    }
   };
 
   // 1. Ticker Handlers
@@ -396,7 +413,11 @@ function App() {
         </div>
 
         {/* RESULTS SECTION */}
-        {result && (
+        {loading ? (
+          <div className="mt-10">
+            <DashboardSkeleton />
+          </div>
+        ) : result ? (
           <div className="animate-fade-in-up">
             {/* Comparison Card */}
             <div className="max-w-7xl mx-auto mb-8">
@@ -443,9 +464,19 @@ function App() {
               </div>
 
               {/* 3. Order Sheet */}
-              <div className="lg:col-span-5 bg-white shadow rounded-lg overflow-hidden border border-gray-100">
-                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div
+                id="order-sheet-container"
+                className="lg:col-span-5 bg-white shadow rounded-lg overflow-hidden border border-gray-100"
+              >
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
                   <h3 className="text-lg font-medium leading-6 text-gray-900">Rebalancing Orders</h3>
+                  <button
+                    type="button"
+                    onClick={handleDownloadOrderSheet}
+                    className="text-sm bg-indigo-50 text-indigo-600 px-3 py-1 rounded border border-indigo-200 hover:bg-indigo-100 transition"
+                  >
+                    📷 Save
+                  </button>
                 </div>
                 <OrderTable
                   allocation={result.allocation}
@@ -456,7 +487,7 @@ function App() {
 
             </div>
           </div>
-        )}
+        ) : null}
       </main>
 
       {result?.backtest_curve && (

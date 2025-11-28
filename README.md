@@ -9,6 +9,7 @@ Full-stack tool for optimizing and rebalancing equity portfolios. The backend us
 - Trade guidance vs. current holdings (buy/sell/hold).
 - Backtest chart vs. S&P 500, showing cumulative equity curves.
 - Local persistence of inputs (tickers, constraints, views) so your form state survives refreshes.
+- Save the order sheet as a PNG image for sharing/reporting, plus loading skeleton UI while optimizations run.
 
 ## Requirements
 - Python 3.9+ (backend)
@@ -47,6 +48,7 @@ curl -X POST http://localhost:8080/api/v1/optimize \
    ```
 The app expects the backend at `http://localhost:8080/api/v1` (configured in `frontend/src/api/api.ts`).
 Inputs are persisted to `localStorage` (tickers, holdings, min/max weights, views). Use the “Reset All” button to clear and revert to defaults.
+Use the “Save” button on the Rebalancing Orders card to download a PNG snapshot (powered by html2canvas).
 
 ## Repository layout
 - `backend/` — FastAPI app, optimization logic, yfinance data loader.
